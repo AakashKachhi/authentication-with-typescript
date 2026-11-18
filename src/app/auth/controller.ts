@@ -1,6 +1,6 @@
 import type { Request, Response } from "express"
 import {randomBytes, createHmac} from "node:crypto"
-import { signupPayloadModel } from "./models"
+import { signinPayloadModel, signupPayloadModel } from "./models"
 import { error } from "node:console"
 import { db } from "../../db"
 import { usersTable } from "../../db/schema"
@@ -28,6 +28,24 @@ class AuthenticationController {
     }).returning({id: usersTable.id})
 
     return res.status(201).json({message: "user has been created successfully", data: {id: result?.id}})
+  }
+
+  public async handleSignin(req: Request, res: Response) {
+    const validationResult = await signinPayloadModel.safeParseAsync(req.body)
+    if(validationResult.error) return res.status(400).json({message: "body validation failed", error: validationResult.error.issues})
+
+    const {email, password} = validationResult.data
+
+    const [userSelect] = await db.select().from(usersTable).where(eq(usersTable.email, email))
+
+    if(!userSelect) return res.status(404).json({message: `User with this ${email} does not exists`})
+
+    const salt = userSelect.salt!
+    const hash = createHmac("sha256", salt).update(password).digest("hex")
+
+    if(userSelect.password !== hash) return res.status(400).json({message: "Invalid email or password"})
+   
+    return res.status(200).json({message: "Sign In Successful", data: {token: 1}})
   }
 }
 

@@ -11,3 +11,5 @@ authRoute.post(
   "/signup",
   authenticationController.handleSignup.bind(authenticationController),
 )
+
+authRoute.post("/signin", authenticationController.handleSignin.bind(authenticationController))
