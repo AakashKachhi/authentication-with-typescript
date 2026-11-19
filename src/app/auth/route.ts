@@ -2,6 +2,7 @@ import express from "express"
 import { Router } from "express"
 
 import AuthenticationController from "./controller"
+import { restrictToAuthenticatedUser } from "./middleware/auth.middleware"
 
 const authenticationController = new AuthenticationController()
 
@@ -13,3 +14,5 @@ authRoute.post(
 )
 
 authRoute.post("/signin", authenticationController.handleSignin.bind(authenticationController))
+
+authRoute.get("/me", restrictToAuthenticatedUser(), authenticationController.handleMe.bind(authenticationController))

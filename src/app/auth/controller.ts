@@ -5,7 +5,8 @@ import { error } from "node:console"
 import { db } from "../../db"
 import { usersTable } from "../../db/schema"
 import { eq } from "drizzle-orm"
-import { createToken } from "./utils/jwt.utils"
+import { createToken, UserTokenPayload } from "./utils/jwt.utils"
+import { email } from "zod"
 
 class AuthenticationController {
   public async handleSignup(req: Request, res: Response) {
@@ -49,6 +50,19 @@ class AuthenticationController {
     const token = createToken({id: userSelect.id})
    
     return res.status(200).json({message: "Sign In Successful", data: {token: token}})
+  }
+
+  public async handleMe(req: Request, res: Response) {
+    // @ts-ignore
+    const {id} = req.user! as UserTokenPayload
+
+    const [userResult] = await db.select().from(usersTable).where(eq(usersTable.id, id))
+
+    return res.status(200).json({
+      firstName: userResult?.firstName,
+      lastName: userResult?.lastName,
+      email: userResult?.email
+    })
   }
 }
 
