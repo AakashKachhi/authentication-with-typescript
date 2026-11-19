@@ -5,6 +5,7 @@ import { error } from "node:console"
 import { db } from "../../db"
 import { usersTable } from "../../db/schema"
 import { eq } from "drizzle-orm"
+import { createToken } from "./utils/jwt.utils"
 
 class AuthenticationController {
   public async handleSignup(req: Request, res: Response) {
@@ -44,8 +45,10 @@ class AuthenticationController {
     const hash = createHmac("sha256", salt).update(password).digest("hex")
 
     if(userSelect.password !== hash) return res.status(400).json({message: "Invalid email or password"})
+
+    const token = createToken({id: userSelect.id})
    
-    return res.status(200).json({message: "Sign In Successful", data: {token: 1}})
+    return res.status(200).json({message: "Sign In Successful", data: {token: token}})
   }
 }
 
